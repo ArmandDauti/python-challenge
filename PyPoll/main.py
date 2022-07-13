@@ -1,87 +1,68 @@
-#Import module
-
+# import modules
 import csv
+import os
 
+# Set path to csv file
+fileLoad = os.path.join("Resources", "election_data.csv")
+
+# File to hold the output 
+outputFile = os.path.join("analysis", "analysis.txt")
 
 # Variables
+totalVotes = 0     
+candidateList = [] 
+candidateVotes = {} 
+winningCount = 0 
+winningCandidate = ""
 
-Votes = []
-Candidates = []
-County = []
-Charles =[]
-Diana =[]
-Raymon =[]
-Percent_of_Charles = []
-Percent_of_Diana = []
-Percent_of_Raymon = []
+# read CSV file
+with open(fileLoad) as Election_Data:
+    csvreader = csv.reader(Election_Data)
 
-Votes_for_Charles = 0
-Votes_for_Diana =0
-Votes_for_Raymon =0
+    # Skip header
+    header = next(csvreader)
 
+    firstRow = next(csvreader)
+    totalVotes += 1
 
-# Open the path to read the file
+    for row in csvreader:
+        totalVotes += 1
 
-csvpath = ('Resources/election_data.csv')
-with open(csvpath) as csvfile:
-        csvreader = csv.reader(csvfile, delimiter=",")
-
-        # Skip Header
-
-        csvheader = next(csvreader)
-              
-        for row in csvreader:
-            Votes.append(row[0])
-            County.append(row[1])
-            Candidates.append(row[2])
-            total_votes = (len(Votes))
-               
-        for candidate in Candidates:
-            if candidate == "Charles Casper Stockham":
-                Charles.append(Candidates)
-                Votes_for_Charles = len(Charles)
+        if row[2] not in candidateList:
+            candidateList.append(row[2])
+            candidateVotes[row[2]] = 1
         
-            elif candidate == "Diana DeGette":
-                Diana.append(Candidates) 
-                Votes_for_Diana = len(Diana) 
-            
-            else:
-                Raymon.append(Candidates)
-                Votes_for_Raymon = len(Raymon)
-        
-        # Calculate percentage votes for each candidate 
+        else:
+            candidateVotes[row[2]] += 1  
+            voteOutput = ""
 
-        Percent_of_Charles = round(((Votes_for_Charles/total_votes)*100),3) 
-        Percent_of_Diana = round(((Votes_for_Diana/total_votes)*100),3)
-        Percent_of_Raymon = round(((Votes_for_Raymon/total_votes)*100), 3)
+    for candidate in candidateVotes:
+        votes = candidateVotes.get(candidate)
+        votePct = (float(votes) / float(totalVotes)) * 100.00
+        voteOutput += f"{candidate}: {votePct:,.3f}% ({votes:,})\n"
+
+        # compare the votes to the winning count
+        if votes > winningCount:
+            winningCount = votes
+            winningCandidate = candidate
+
+    winningCandidateOutput = f"Winner: {winningCandidate}\n"
 
 
-        # Winner
-        if Percent_of_Charles > max(Percent_of_Diana,Percent_of_Raymon):
-            winner = "Charles Casper Stockham"  
-        
-        elif Percent_of_Diana > max(Percent_of_Raymon, Percent_of_Charles):
-            winner = "Diana DeGette"      
+    # Print in terminal
+    output = (
+        f"\n\nElection Results\n"
+        f"-------------------------\n"
+        f"Total Votes: {totalVotes:,}\n"
+        f"-------------------------\n"
+        f"{voteOutput}"
+        f"-------------------------\n"
+        f"{winningCandidateOutput}"
+        f"-------------------------\n"
+    )
 
-        else:    
-            winner = "Raymon Anthony Doane" 
+print(output)
 
-  # Print results to terminal
-
-        election_results = f'''
-                Election Results
-                -----------------------------
-                Total Votes: {str(total_votes)}
-                -----------------------------
-                Charles Casper Stockham: {str(Percent_of_Charles)}% ({str(Votes_for_Charles)})
-                Diana DeGette: {str(Percent_of_Diana)}% ({str(Votes_for_Diana)})
-                Raymon Anthony Doane: {str(Percent_of_Raymon)}% ({str(Votes_for_Raymon)})
-                -------------------------------- 
-                Winner: {winner} 
-                '''
-        print(election_results)
-                
-
-        # Export results to txt file.
-with open("Analysis/election_data.txt", "w") as election_analysis:
-    election_analysis.write(election_results)
+# Export the text file
+with open(outputFile, "w") as textFile:
+    textFile.write(output)
